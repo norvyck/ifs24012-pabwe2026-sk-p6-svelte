@@ -2,10 +2,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent, waitFor } from "@testing-library/svelte";
 import MarkdownEditor from "./MarkdownEditor.svelte";
 
+const { mockTick } = vi.hoisted(() => ({
+  mockTick: vi.fn(),
+}));
+
 let mockEvents = {};
 const mockGetMarkdown = vi.fn(() => "mock editor text");
 const mockSetMarkdown = vi.fn();
 const mockDestroy = vi.fn();
+
+vi.mock("svelte", async (importOriginal) => ({
+  ...(await importOriginal()),
+  tick: mockTick,
+}));
 
 vi.mock("@toast-ui/editor", () => {
   return {
@@ -22,6 +31,7 @@ describe("MarkdownEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockEvents = {};
+    mockTick.mockResolvedValue(undefined);
   });
 
   it("should initialize Editor with props and handle change event", async () => {
@@ -94,5 +104,23 @@ describe("MarkdownEditor", () => {
       expect.any(Error)
     );
     consoleError.mockRestore();
+  });
+
+  it("should not initialize Editor if unmounted before the editor container updates", async () => {
+    const EditorMock = (await import("@toast-ui/editor")).default;
+    let resolveTick;
+    mockTick.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveTick = resolve;
+        })
+    );
+    const { unmount } = render(MarkdownEditor);
+
+    await waitFor(() => expect(mockTick).toHaveBeenCalled());
+    unmount();
+    resolveTick();
+    await Promise.resolve();
+    await waitFor(() => expect(EditorMock).not.toHaveBeenCalled());
   });
 });
