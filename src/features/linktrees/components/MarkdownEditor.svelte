@@ -1,7 +1,5 @@
 <script>
-  import { onMount, onDestroy } from "svelte";
-  import Editor from "@toast-ui/editor";
-  import "@toast-ui/editor/dist/toastui-editor.css";
+  import { onMount, tick } from "svelte";
 
   export let value = "";
   export let placeholder = "Tulis deskripsi dengan format Markdown...";
@@ -10,27 +8,53 @@
 
   let editorContainer;
   let editorInstance;
+  let editorReady = false;
 
   onMount(() => {
-    try {
-      editorInstance = new Editor({
-        el: editorContainer,
-        height: height,
-        initialEditType: "markdown",
-        previewStyle: "tab",
-        initialValue: value || "",
-        placeholder: placeholder,
-        usageStatistics: false,
-        hideModeSwitch: false,
-        events: {
-          change: () => {
-            value = editorInstance.getMarkdown();
+    let mounted = true;
+
+    async function initializeEditor() {
+      try {
+        const [{ default: Editor }] = await Promise.all([
+          import("@toast-ui/editor"),
+          import("@toast-ui/editor/dist/toastui-editor.css"),
+        ]);
+        if (!mounted) return;
+
+        editorReady = true;
+        await tick();
+        if (!mounted) return;
+
+        editorInstance = new Editor({
+          el: editorContainer,
+          height: height,
+          initialEditType: "markdown",
+          previewStyle: "tab",
+          initialValue: value || "",
+          placeholder: placeholder,
+          usageStatistics: false,
+          hideModeSwitch: false,
+          events: {
+            change: () => {
+              value = editorInstance.getMarkdown();
+            },
           },
-        },
-      });
-    } catch {
-      editorInstance = null;
+        });
+      } catch (error) {
+        editorReady = false;
+        console.error("Failed to load the Markdown editor", error);
+      }
     }
+
+    initializeEditor();
+
+    return () => {
+      mounted = false;
+      if (editorInstance) {
+        editorInstance.destroy();
+        editorInstance = null;
+      }
+    };
   });
 
   $: if (editorInstance && value !== editorInstance.getMarkdown()) {
@@ -43,26 +67,23 @@
       editorInstance.setMarkdown(e.target.value);
     }
   }
-
-  onDestroy(() => {
-    if (editorInstance) {
-      editorInstance.destroy();
-      editorInstance = null;
-    }
-  });
 </script>
 
 <div class="toastui-editor-wrapper">
-  <!-- Fallback hidden textarea with data-testid for accessibility and test compatibility -->
   <textarea
     data-testid={textareaTestId}
     {value}
+    {placeholder}
     on:input={onTextareaInput}
-    class="hidden"
-    tabindex="-1"
-    aria-hidden="true"
+    class:hidden={editorReady}
+    class="w-full flex-1 min-h-[240px] resize-y rounded-xl border border-slate-200 p-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+    aria-label="Deskripsi Markdown"
   ></textarea>
-  <div bind:this={editorContainer} data-testid="markdown-editor-container"></div>
+  <div
+    bind:this={editorContainer}
+    data-testid="markdown-editor-container"
+    class:hidden={!editorReady}
+  ></div>
 </div>
 
 <style>
@@ -77,6 +98,9 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+  }
+  .toastui-editor-wrapper > textarea {
+    height: 100%;
   }
   :global(.toastui-editor-wrapper .toastui-editor-defaultUI) {
     display: flex;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, fireEvent } from "@testing-library/svelte";
+import { render, fireEvent, waitFor } from "@testing-library/svelte";
 import MarkdownEditor from "./MarkdownEditor.svelte";
 
 let mockEvents = {};
@@ -36,6 +36,8 @@ describe("MarkdownEditor", () => {
 
     const textarea = container.querySelector('[data-testid="custom-editor-textarea"]');
     expect(textarea).toBeTruthy();
+    const EditorMock = (await import("@toast-ui/editor")).default;
+    await waitFor(() => expect(EditorMock).toHaveBeenCalled());
 
     // Trigger editor event change
     if (mockEvents.change) {
@@ -62,6 +64,8 @@ describe("MarkdownEditor", () => {
       },
     });
 
+    const EditorMock = (await import("@toast-ui/editor")).default;
+    await waitFor(() => expect(EditorMock).toHaveBeenCalled());
     const textarea = container.querySelector("textarea");
     await fireEvent.input(textarea, { target: { value: "manual input" } });
 
@@ -70,6 +74,7 @@ describe("MarkdownEditor", () => {
 
   it("should handle input and unmount gracefully when Editor fails to initialize", async () => {
     const EditorMock = (await import("@toast-ui/editor")).default;
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     EditorMock.mockImplementationOnce(function () {
       throw new Error("Initialization failed");
     });
@@ -80,8 +85,14 @@ describe("MarkdownEditor", () => {
       },
     });
 
+    await waitFor(() => expect(EditorMock).toHaveBeenCalled());
     const textarea = container.querySelector("textarea");
     await fireEvent.input(textarea, { target: { value: "manual input fallback" } });
     unmount();
+    expect(consoleError).toHaveBeenCalledWith(
+      "Failed to load the Markdown editor",
+      expect.any(Error)
+    );
+    consoleError.mockRestore();
   });
 });

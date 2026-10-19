@@ -14,6 +14,7 @@ describe("SidebarComponent", () => {
     expect(wrapper.text()).toContain("Semua Link Tree");
     expect(wrapper.text()).toContain("Semua Pengguna");
     expect(wrapper.text()).toContain("Profil Saya");
+    expect(wrapper.find("p").classes()).toContain("text-slate-600");
   });
 
   it("should render backdrop and trigger close-mobile when backdrop clicked on mobile", async () => {
