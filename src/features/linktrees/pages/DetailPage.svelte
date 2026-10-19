@@ -30,29 +30,39 @@
   let showEditModal = false;
   let showItemModal = false;
   let selectedItem = null;
+  let loadingLinkTree = !$linkTreesStore.linkTree;
 
   onMount(() => {
-    if (linkTreeId) {
-      linkTreesStore.asyncSetLinkTree(linkTreeId);
-    }
+    loadLinkTree(linkTreeId);
   });
 
   let prevId = linkTreeId;
   $: if (linkTreeId !== prevId) {
     prevId = linkTreeId;
-    linkTreesStore.asyncSetLinkTree(linkTreeId);
+    loadLinkTree(linkTreeId);
   }
 
   $: if ($linkTreesStore.isLinkTree) {
     linkTreesStore.setIsLinkTree(false);
-    if (!linkTree) {
-      navigate("/");
-    }
   }
 
   $: if ($linkTreesStore.isLinkTreeDeleted) {
     linkTreesStore.setIsLinkTreeDeleted(false);
     navigate("/");
+  }
+
+  async function loadLinkTree(id) {
+    const hasMatchingTree = linkTree && String(linkTree.id) === String(id);
+    loadingLinkTree = !hasMatchingTree;
+    if (!hasMatchingTree) {
+      linkTreesStore.setLinkTree(null);
+    }
+
+    if (id) {
+      await linkTreesStore.asyncSetLinkTree(id);
+    }
+
+    loadingLinkTree = false;
   }
 
   async function handleDelete() {
@@ -82,9 +92,25 @@
   $: items = linkTree?.items || [];
 </script>
 
-{#if !profile || !linkTree}
+{#if !profile || loadingLinkTree}
   <div class="flex flex-col items-center justify-center py-20">
     <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+{:else if !linkTree}
+  <div class="flex flex-col items-center justify-center py-20 text-center">
+    <h1 class="text-xl font-bold text-slate-800">Link tree tidak ditemukan</h1>
+    <p class="mt-2 text-sm text-slate-500">
+      Link tree ini tidak tersedia atau mungkin sudah dihapus.
+    </p>
+    <a
+      href="/"
+      data-testid="back-to-linktrees-link"
+      on:click|preventDefault={() => navigate("/")}
+      class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+    >
+      <ArrowLeft size={18} />
+      Kembali ke Link Tree
+    </a>
   </div>
 {:else}
   <div class="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-300">

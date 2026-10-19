@@ -261,10 +261,10 @@ describe("DetailPage", () => {
     expect(deleteItemSpy).not.toHaveBeenCalled();
   });
 
-  it("should navigate back to home if isLinkTree is true and linkTree is null", async () => {
+  it("should show not-found state without redirecting when linkTree is null", async () => {
     vi.spyOn(linkTreesStore, "asyncSetLinkTree").mockImplementation(() => Promise.resolve());
     const navigateSpy = vi.spyOn(router, "navigate").mockImplementation(() => {});
-    const { linkTreesStore: ltStore } = renderWithProviders(DetailPage, {
+    const { wrapper, linkTreesStore: ltStore } = renderWithProviders(DetailPage, {
       props: { linkTreeId: 1 },
       preloadedState: {
         profile: mockProfile,
@@ -272,10 +272,15 @@ describe("DetailPage", () => {
         isLinkTree: false,
       },
     });
+    navigateSpy.mockClear();
 
     ltStore.setIsLinkTree(true);
     await new Promise((r) => setTimeout(r, 10));
 
+    expect(navigateSpy).not.toHaveBeenCalledWith("/");
+    expect(wrapper.text()).toContain("Link tree tidak ditemukan");
+
+    await wrapper.find('[data-testid="back-to-linktrees-link"]').trigger("click");
     expect(navigateSpy).toHaveBeenCalledWith("/");
   });
 
