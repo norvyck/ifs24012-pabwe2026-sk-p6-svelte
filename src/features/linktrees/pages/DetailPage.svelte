@@ -182,7 +182,7 @@
       <div class="p-6 sm:p-8 space-y-6">
         <div class="space-y-3">
           <div class="flex items-center gap-3">
-            <span class="font-mono text-xs font-bold text-slate-400">
+            <span class="font-mono text-xs font-bold text-slate-600">
               {"#" + linkTree.id}
             </span>
             {#if linkTree.type === 'public'}
@@ -207,14 +207,14 @@
             {linkTree.title}
           </h1>
 
-          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-700">
             <div class="flex items-center gap-1.5">
               <Calendar size={14} class="shrink-0" />
-              <span>Dibuat: <strong class="text-slate-500">{formatDate(linkTree.created_at)}</strong></span>
+              <span>Dibuat: <strong class="text-slate-800">{formatDate(linkTree.created_at)}</strong></span>
             </div>
             <div class="flex items-center gap-1.5">
               <Calendar size={14} class="shrink-0" />
-              <span>Diperbarui: <strong class="text-slate-500">{formatDate(linkTree.updated_at)}</strong></span>
+              <span>Diperbarui: <strong class="text-slate-800">{formatDate(linkTree.updated_at)}</strong></span>
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@
           {#if linkTree.description}
             <MarkdownViewer content={linkTree.description} />
           {:else}
-            <p class="italic text-slate-400">Tidak ada deskripsi rinci untuk link tree ini.</p>
+            <p class="italic text-slate-600">Tidak ada deskripsi rinci untuk link tree ini.</p>
           {/if}
         </div>
       </div>
@@ -237,7 +237,7 @@
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Daftar Tautan</h2>
-          <p class="text-xs text-slate-500">Kumpulan link aktif dalam link tree ini</p>
+          <p class="text-xs text-slate-600">Kumpulan link aktif dalam link tree ini</p>
         </div>
         <button
           type="button"
@@ -251,7 +251,7 @@
       </div>
 
       {#if items.length === 0}
-        <div class="py-12 text-center text-slate-400">
+        <div class="py-12 text-center text-slate-600">
           <Link size={36} class="mx-auto text-slate-300 mb-2" />
           <p class="text-sm font-medium">Belum ada tautan ditambahkan dalam link tree ini.</p>
         </div>

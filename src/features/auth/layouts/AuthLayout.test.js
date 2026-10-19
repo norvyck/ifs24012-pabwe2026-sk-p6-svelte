@@ -20,6 +20,8 @@ describe("AuthLayout", () => {
     });
 
     expect(wrapper.text()).toContain("Delcom Link Tree");
+    expect(wrapper.find("main").exists()).toBe(true);
+    expect(wrapper.find("h1").text()).toBe("Delcom Link Tree");
     expect(wrapper.text()).toContain("Masuk Akun");
     expect(wrapper.text()).toContain("Daftar Baru");
   });
